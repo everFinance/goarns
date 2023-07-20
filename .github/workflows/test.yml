@@ -1,105 +1,74 @@
-name: Run tests
-
+name: Unit-Tests
 on:
-  push:
-    branches:
-      - main
-      - dev
-    paths-ignore:
-      - '**.md'
-      - '**.yml'
-      - '**.yaml'
-      - 'examples/*'
-      - '!.github/workflows/test.yml'
   pull_request:
-    branches:
-      - main
-      - dev
-    paths-ignore:
-      - '**.md'
+    paths:
+      - 'go.mod'
+      - '**.go'
       - '**.yml'
-      - '**.yaml'
-      - 'examples/*'
-      - '!.github/workflows/test.yml'
-
-env:
-  GO111MODULE: on
-  GOPROXY: "https://proxy.golang.org"
+  push:
+    paths:
+      - 'go.mod'
+      - '**.go'
+      - '**.yml'
 
 jobs:
-  lint:
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-    name: Run golangci-lint
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Setup Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: '^1.17'
 
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup and run golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.51.2
-          args: --timeout 5m -v -E gofumpt -E gocritic -E misspell -E revive -E godot
   test:
-    needs: lint
+    name: Test on go ${{ matrix.go_version }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        go: [1.17]
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    name: Go ${{ matrix.go }} @ ${{ matrix.os }}
-    runs-on: ${{ matrix.os}}
+        os: [ubuntu-latest, windows-latest]
+        go_version: [1.17, 1.18, 1.19]
+
     steps:
-      - name: Checkout repository
+      - name: Check out code
         uses: actions/checkout@v3
-        with:
-          ref: ${{ github.ref }}
 
-      - name: Setup Go
-        uses: actions/setup-go@v3
+      - name: Setup Go Faster
+        uses: WillAbides/setup-go-faster@v1.8.0
+        timeout-minutes: 3
         with:
-          go-version: ${{ matrix.go }}
+          go-version: ${{ matrix.go_version }}
 
-      - name: Print Go environment
-        id: go-env
-        run: |
-          printf "Using go at: $(which go)\n"
-          printf "Go version: $(go version)\n"
-          printf "\n\nGo environment:\n\n"
-          go env
-          printf "\n\nSystem environment:\n\n"
-          env
-          # Calculate the short SHA1 hash of the git commit
-          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "GO_CACHE=$(go env GOCACHE)" >> $GITHUB_OUTPUT
-
-      - name: Cache go modules
-        uses: actions/cache@v3
+      - name: Revive check
+        uses: morphy2k/revive-action@v2.5.2
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.go_version == '1.20' }}
         with:
-          path: |
-            ${{ steps.go-env.outputs.GO_CACHE }}
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-${{ matrix.go }}-go-ci-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.go }}-go-ci
+          # Exclude patterns, separated by semicolons (optional)
+          exclude: "./internal/..."
+
+      - name: Run staticcheck
+        uses: reviewdog/action-staticcheck@v1
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.go_version == '1.20' }}
+        with:
+          github_token: ${{ secrets.github_token }}
+          # Change reviewdog reporter if you need [github-pr-check,github-check,github-pr-review].
+          reporter: github-check
+          # Report all results. [added,diff_context,file,nofilter].
+          filter_mode: added
+          # Exit with 1 when it finds at least one finding.
+          fail_on_error: false
 
       - name: Run unit tests
-        run: go test -v -race -coverprofile="codecov.report" -covermode=atomic
+        # run: go test -v -cover ./...
+        # must add " for profile.cov on Windows OS
+        run: go test -coverprofile="profile.cov" ./...
 
-      - name: Upload code coverage report to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Send coverage
+        uses: shogo82148/actions-goveralls@v1
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         with:
-          file: ./codecov.report
-          flags: unittests
-          name: codecov-ants
-          fail_ci_if_error: true
-          verbose: true
+          path-to-profile: profile.cov
+          flag-name: Go-${{ matrix.go_version }}
+          parallel: true
+
+  # notifies that all test jobs are finished.
+  # https://github.com/shogo82148/actions-goveralls
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shogo82148/actions-goveralls@v1
+        with:
+          parallel-finished: true

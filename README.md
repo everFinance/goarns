@@ -8,3 +8,43 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/wujunze/goarns.svg)](https://pkg.go.dev/github.com/wujunze/goarns)
 
 
+
+## What is ArNS
+ArNS: https://ar.io/arns/
+
+### Installation
+
+```shell
+go get github.com/everFinance/goarns
+```
+
+## How to Use
+```go
+package example
+
+import (
+	"github.com/everFinance/goarns"
+	"time"
+)
+
+func QueryArNS() {
+
+	dreUrl := "https://dre-3.warp.cc"
+	arNSAddress := "bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U"
+	timeout := 10 * time.Second
+
+	domain := "arseeding"
+
+	a := goarns.NewArNS(dreUrl, arNSAddress, timeout)
+
+	txId, err := a.QueryLatestRecord(domain)
+
+	if err != nil {
+		print(err)
+	}
+	print(txId)
+
+}
+```
+
+

@@ -201,6 +201,20 @@ func TestArNS_QueryLatestRecord(t *testing.T) {
 			wantTxId: "wQk7txuMvlrlYlVozj6aeF7E9dlwar8nNtfs3iNTpbQ",
 			wantErr:  false,
 		},
+
+		{
+			name: "test init domain data success",
+			fields: fields{
+				DreUrl:      "https://dre-3.warp.cc",
+				ArNSAddress: "bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U",
+				Timeout:     10 * time.Second,
+			},
+			args: args{
+				domain: "web3infra",
+			},
+			wantTxId: "wQk7txuMvlrlYlVozj6aeF7E9dlwar8nNtfs3iNTpbQ",
+			wantErr:  false,
+		},
 		{
 			name: "test error",
 			fields: fields{
@@ -262,6 +276,20 @@ func TestArNS_QueryNameCa(t *testing.T) {
 		},
 
 		{
+			name: "test init domain success",
+			fields: fields{
+				DreUrl:      "https://dre-3.warp.cc",
+				ArNSAddress: "bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U",
+				Timeout:     10 * time.Second,
+			},
+			args: args{
+				domain: "web3infra",
+			},
+			wantCaAddress: "Vx4bW_bh7nXMyq-Jy24s9EiCyY_BXZuToshhSqabc9o",
+			wantErr:       false,
+		},
+
+		{
 			name: "test error",
 			fields: fields{
 				DreUrl:      "",
@@ -314,6 +342,7 @@ func TestArNS_QueryNameCa(t *testing.T) {
 			t.Logf("wantErr: %v", tt.wantErr)
 			a := NewArNS(tt.fields.DreUrl, tt.fields.ArNSAddress, tt.fields.Timeout)
 			gotCaAddress, err := a.QueryNameCa(tt.args.domain)
+			t.Logf("gotCaAddress: %v", gotCaAddress)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("QueryNameCa() error = %v, wantErr %v", err, tt.wantErr)
 				return

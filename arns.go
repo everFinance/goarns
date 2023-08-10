@@ -106,6 +106,23 @@ func (a *ArNS) GetArNSTxID(caAddress string, domain string) (txId string, err er
 
 	value := gjson.Get(string(body), "state.records."+domain+".transactionId")
 
+	/** The ArNS interface will return two types of data for compatibility processing
+	data type 1: https://dre-1.warp.cc/contract?id=jr4P6Y_Olv3QGho0uo7p9DpvSn33mUC_XgJSKB3JDZ4
+	records:{
+	@:{
+	transactionId:"wQk7txuMvlrlYlVozj6aeF7E9dlwar8nNtfs3iNTpbQ"
+	ttlSeconds:900
+	}
+	}
+	data type 2: https://dre-3.warp.cc/contract?id=Vx4bW_bh7nXMyq-Jy24s9EiCyY_BXZuToshhSqabc9o
+	records:{
+	@:"wQk7txuMvlrlYlVozj6aeF7E9dlwar8nNtfs3iNTpbQ"
+	}
+	*/
+	if !value.Exists() {
+		value = gjson.Get(string(body), "state.records."+domain)
+	}
+
 	if !value.Exists() {
 		return "", fmt.Errorf("GetArNSTxID: domain %s not exist", domain)
 	}

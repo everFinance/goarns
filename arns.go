@@ -104,7 +104,7 @@ func (a *ArNS) GetArNSTxID(caAddress string, domain string) (txId string, err er
 		return "", err
 	}
 
-	value := gjson.Get(string(body), "state.records."+domain)
+	value := gjson.Get(string(body), "state.records."+domain+".transactionId")
 
 	if !value.Exists() {
 		return "", fmt.Errorf("GetArNSTxID: domain %s not exist", domain)

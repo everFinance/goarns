@@ -91,7 +91,7 @@ func TestArNS_GetArNSTxID(t *testing.T) {
 				caAddress: "jr4P6Y_Olv3QGho0uo7p9DpvSn33mUC_XgJSKB3JDZ4",
 				domain:    "@",
 			},
-			wantTxId: "A-fw_oYPIst7NM-zKzKkVMSal3nV5PBGuFoYm1bUTAU",
+			wantTxId: "wQk7txuMvlrlYlVozj6aeF7E9dlwar8nNtfs3iNTpbQ",
 			wantErr:  false,
 		},
 
@@ -198,7 +198,7 @@ func TestArNS_QueryLatestRecord(t *testing.T) {
 			args: args{
 				domain: "arseeding",
 			},
-			wantTxId: "A-fw_oYPIst7NM-zKzKkVMSal3nV5PBGuFoYm1bUTAU",
+			wantTxId: "wQk7txuMvlrlYlVozj6aeF7E9dlwar8nNtfs3iNTpbQ",
 			wantErr:  false,
 		},
 		{
